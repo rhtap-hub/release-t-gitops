@@ -1,0 +1,47 @@
+apiVersion: tekton.dev/v1
+kind: PipelineRun
+metadata:
+  name: release-t-on-pull-request
+  namespace: release-t
+  labels:
+    argocd/app-name: release-t
+    janus-idp.io/tekton: release-t
+    backstage.io/kubernetes-id: release-t
+    backstage.io/kubernetes-namespace: release-t 
+    app.kubernetes.io/part-of: release-t
+  annotations:
+    pipelinesascode.tekton.dev/on-event: "[pull_request]"
+    pipelinesascode.tekton.dev/on-target-branch: "[main]"
+    pipelinesascode.tekton.dev/max-keep-runs: "2"
+    pipelinesascode.tekton.dev/pipeline: "https://raw.githubusercontent.com/redhat-appstudio/tssc-sample-pipelines/main/new-for-dance/pipelines-helm/pipeline-promote.yaml"
+    # Todo: pac tasks need to be added after the pipleline has been finalized
+    # pipelinesascode.tekton.dev/task-0: "https://raw.githubusercontent.com/redhat-appstudio/tssc-sample-pipelines/main/pac/tasks/init.yaml"
+    # pipelinesascode.tekton.dev/task-1: "https://raw.githubusercontent.com/redhat-appstudio/tssc-sample-pipelines/main/pac/tasks/git-clone.yaml"
+    # pipelinesascode.tekton.dev/task-2: "https://raw.githubusercontent.com/redhat-appstudio/tssc-sample-pipelines/main/new-for-dance/tasks/task-verify-enterprise-contract.yaml"
+spec: 
+  params:
+  # Todo: params need to be updated after the pipeline has been finalized
+  - name: namespace
+    value: release-t
+  - name: gitops-repo-url
+    value: https://github.com/rhtap-hub/release-t-gitops
+  - name: source-repo-url
+    value: https://github.com/rhtap-hub/release-t
+  - name: component-id
+    value: release-t
+  - name: revision
+    value: '{{revision}}'
+  - name: argocd-host
+    value: argocd.example.com # hardcoded for now
+  pipelineRef:
+    name: release-t-gitops-promote
+  workspaces:
+    - name: workspace
+      volumeClaimTemplate: 
+        spec:
+          accessModes:
+          - ReadWriteOnce
+          resources:
+            requests:
+              storage: 1Gi
+ 
